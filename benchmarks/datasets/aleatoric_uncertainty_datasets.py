@@ -2,8 +2,26 @@ import json
 from typing import Dict
 
 import numpy as np
+from PIL import Image
+from baal.active.heuristics.heuristics import _shuffle_subset
+from skimage import img_as_float
+from skimage.util import random_noise
+from torchvision.transforms import Compose
 
 from datasets.synbols import Synbols
+
+
+class ColorNoise:
+    def __init__(self, p, sigma, seed):
+        self.p = p
+        self.sigma = sigma
+        self.rng = np.random.RandomState(seed)
+
+    def __call__(self, x):
+        if self.rng.rand() < self.p:
+            x = Image.fromarray(random_noise(img_as_float(x), sigma=self.sigma ** 2))
+        return x
+
 
 SLANT_MAP = {
     'italic',
@@ -49,14 +67,22 @@ class Attributes:
 
 
 class AleatoricSynbols(Synbols):
-    def __init__(self, uncertainty_config: Dict, path, split, key='font', transform=None, p=0.5,
-                 seed=None, n_classes=None):
+    def __init__(self, uncertainty_config: Dict, path, split, key='font', transform=None, p=0.0,
+                 seed=None, n_classes=None, pixel_sigma=0, pixel_p=0):
         super().__init__(path=path, split=split, key=key, transform=transform)
         self.uncertainty_config = uncertainty_config
         self.p = p
+        self.pixel_sigma = pixel_sigma
+        self.pixel_p = pixel_p
         self.seed = seed
         self.noise_classes = n_classes
         self.rng = np.random.RandomState(self.seed)
+        if self.pixel_p > 0 and split == 'train':
+            self.transform = self._add_pixel_noise()
+        if self.p > 0 and len(uncertainty_config) == 0:
+            self.y = self._shuffle_label()
+        elif self.p > 0:
+            self._create_aleatoric_noise()
 
     def get_splits(self, source):
         if self.split == 'train':
@@ -76,6 +102,12 @@ class AleatoricSynbols(Synbols):
     def get_values_split(self, y):
         start, end = self.get_splits(source=y)
         return y[self.indices[start:end]]
+
+    def _shuffle_label(self):
+        return _shuffle_subset(self.y, self.p)
+
+    def _add_pixel_noise(self):
+        return Compose([ColorNoise(self.p, self.pixel_sigma, self.seed), self.transform])
 
     def _create_aleatoric_noise(self):
         self._latent_space = self._get_latent_space()
