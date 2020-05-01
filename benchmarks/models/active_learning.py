@@ -15,6 +15,7 @@ from torch import nn
 from torch.nn import CrossEntropyLoss
 from torch.utils.data import DataLoader
 from torchvision import models
+from utils.embedding_propagation import embedding_propagation
 
 from datasets import get_dataset
 
@@ -282,5 +283,6 @@ class MixUpActiveLearning(ActiveLearning):
 
 
 class EmbeddingPropActiveLearning(ActiveLearning):
-    # PAU YOUR CODE HERE
-    pass
+    def forward(self, input: torch.Tensor):
+        assert(len(input.shape) == 2)
+        return embedding_propagation(input, alpha=0.5, rbf_scale=1, norm_prop=False)
