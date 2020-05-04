@@ -3,7 +3,6 @@ from typing import Dict
 
 import numpy as np
 from PIL import Image
-from baal.active.heuristics.heuristics import _shuffle_subset
 from skimage import img_as_float
 from skimage.util import random_noise
 from torchvision.transforms import Compose
@@ -21,6 +20,12 @@ class ColorNoise:
         if self.rng.rand() < self.p:
             x = Image.fromarray(random_noise(img_as_float(x), sigma=self.sigma ** 2))
         return x
+
+
+def _shuffle_subset(data: np.ndarray, shuffle_prop: float, rng) -> np.ndarray:
+    to_shuffle = np.nonzero(rng.rand(data.shape[0]) < shuffle_prop)[0]
+    data[to_shuffle, ...] = data[rng.permutation(to_shuffle), ...]
+    return data
 
 
 SLANT_MAP = {
@@ -104,7 +109,7 @@ class AleatoricSynbols(Synbols):
         return y[self.indices[start:end]]
 
     def _shuffle_label(self):
-        return _shuffle_subset(self.y, self.p)
+        return _shuffle_subset(self.y, self.p, self.rng)
 
     def _add_pixel_noise(self):
         return Compose([ColorNoise(self.p, self.pixel_sigma, self.seed), self.transform])

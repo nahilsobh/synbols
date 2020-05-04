@@ -28,6 +28,8 @@ def get_dataset(split, dataset_dict):
     elif dataset_dict["name"] == "active_learning":
 
         transform = tt.Compose([tt.ToPILImage(), tt.ToTensor()])
+        n_classes = dataset_dict.get('n_classes')
+        n_classes = n_classes or (52 if dataset_dict['task'] == 'char' else 1002)
         dataset = AleatoricSynbols(uncertainty_config=dataset_dict.get('uncertainty_config', {}),
                                    path=dataset_dict["path"],
                                    split=split,
@@ -35,7 +37,7 @@ def get_dataset(split, dataset_dict):
                                    transform=transform,
                                    p=dataset_dict.get('p', 0.0),
                                    seed=dataset_dict.get('seed', 666),
-                                   n_classes=dataset_dict['n_classes'],
+                                   n_classes=n_classes,
                                    pixel_sigma=dataset_dict.get('pixel_sigma', 0.0),
                                    pixel_p=dataset_dict.get('pixel_p', 0.0),
                                    )
