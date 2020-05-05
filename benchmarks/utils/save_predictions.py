@@ -12,6 +12,7 @@ from datasets import get_dataset
 from models import ActiveLearning
 
 SEED = 1337
+SAVE = False
 torch.manual_seed(SEED)
 np.random.seed(SEED)
 
@@ -24,7 +25,7 @@ kwargs = {
     'uncertainty_config': {'is_bold': {}}}
 
 exp_dict = {
-    'lr': 0.001,
+    'lr': 0.0001,
     'batch_size': 32,
     'model': "active_learning",
     'seed': 1337,
@@ -34,7 +35,7 @@ exp_dict = {
     'num_classes': 52,
     'query_size': 100,
     'shuffle_prop': 0.0,
-    'learning_epoch': 10,
+    'learning_epoch': 30,
     'heuristic': 'bald',
     'iterations': 20,
     'max_epoch': 2000,
@@ -98,7 +99,7 @@ def get_aleatoric_bitmap(ds):
 
 def main():
     model = ActiveLearning(exp_dict)
-    warmup = 3
+    warmup = 100
     al_dataset = get_dataset(split='train', dataset_dict=kwargs)
     val = get_dataset(split='val', dataset_dict=kwargs)
     ds = al_dataset._dataset
@@ -130,7 +131,12 @@ def main():
         pprint({k: np.mean(v) for k, v in d.items() if 'pred' not in k})
         print(f"Aleatoric BALD:", np.mean(d['aleatoric_left'] - d['aleatoric_right']))
         print(f"Normal BALD:", np.mean(d['normal_left'] - d['normal_right']))
-        pickle.dump(d, open(f'/mnt/projects/bayesian-active-learning/synbols_ckpt/preds_{w}.pkl',
+
+        selected_idx = np.argsort(d['left'] - d['right'])[-100:]
+        is_aleatoric = aleatoric_idx[selected_idx]
+        print(f"Selected {is_aleatoric.sum()} Aleatoric out of 100")
+        if SAVE:
+            pickle.dump(d, open(f'/mnt/projects/bayesian-active-learning/synbols_ckpt/preds_{w}.pkl',
                             'wb'))
 
 

@@ -92,7 +92,7 @@ class ActiveLearning(torch.nn.Module):
         self.loop = ActiveLearningLoop(None, self.wrapper.predict_on_dataset,
                                        heuristic=self.heuristic,
                                        ndata_to_label=exp_dict['query_size'],
-                                       batch_size=1,
+                                       batch_size=self.batch_size,
                                        iterations=exp_dict['iterations'],
                                        use_cuda=True,
                                        max_sample=max_sample)
@@ -124,7 +124,8 @@ class ActiveLearning(torch.nn.Module):
         val_data = loader.dataset
         self.loop.step()
         self.criterion.eval()
-        self.wrapper.test_on_dataset(val_data, batch_size=self.batch_size, use_cuda=True)
+        self.wrapper.test_on_dataset(val_data, batch_size=self.batch_size, use_cuda=True,
+                                     average_predictions=20)
         metrics = self.wrapper.metrics
         mets = self._format_metrics(metrics, 'test')
         mets.update({'num_samples': len(self.active_dataset)})
@@ -179,30 +180,28 @@ class CalibratedActiveLearning(ActiveLearning):
                 self.active_dataset.load_state_dict(self.active_dataset_settings)
             self.loop.dataset = self.active_dataset
 
-        hist, best_weight = self.wrapper.train_and_test_on_datasets(self.active_dataset,
-                                                                    self.optimizer,
-                                                                    self.batch_size,
-                                                                    epoch=self.learning_epoch,
-                                                                    use_cuda=True,
-                                                                    return_best_weights=True,
-                                                                    patience=5)
-
-        self.wrapper.load_state_dict(best_weight)
+        self.wrapper.train_on_dataset(self.active_dataset,
+                                      self.optimizer,
+                                      self.batch_size,
+                                      epoch=self.learning_epoch,
+                                      use_cuda=True)
 
         metrics = self.wrapper.metrics
         return self._format_metrics(metrics, 'train')
 
     def val_on_loader(self, loader, savedir=None):
         val_data = loader.dataset
-        self.calibrator.calibrate(self.calib_set, self.valid_set,
-                                  batch_size=16, epoch=10, use_cuda=True,
-                                  double_fit=True)
-        calibrated_model = ModelWrapper(self.calibrator.calibrated_model,
-                                        None)
+
         if self.calibrate:
+            self.calibrator.calibrate(self.calib_set, self.valid_set,
+                                      batch_size=16, epoch=10, use_cuda=True,
+                                      double_fit=True)
+            calibrated_model = ModelWrapper(self.calibrator.calibrated_model,
+                                            None)
             self.loop.get_probabilities = calibrated_model.predict_on_dataset
         self.loop.step()
-        self.wrapper.test_on_dataset(val_data, batch_size=self.batch_size, use_cuda=True)
+        self.wrapper.test_on_dataset(val_data, batch_size=self.batch_size,
+                                     use_cuda=True, average_predictions=20)
         metrics = self.wrapper.metrics
         mets = self._format_metrics(metrics, 'test')
         mets.update({'num_samples': len(self.active_dataset)})
@@ -231,3 +230,8 @@ class EmbeddingPropActiveLearning(ActiveLearning):
     def __init__(self, exp_dict):
         super().__init__(exp_dict)
         embd_prop.patch_layer_embed_prop(self.wrapper.model, 'classifier.6')
+        self.initial_weights = deepcopy(self.backbone.state_dict())
+
+
+class CSGHMCActiveLearning(ActiveLearning):
+    pass

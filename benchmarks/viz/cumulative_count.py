@@ -6,7 +6,7 @@ import numpy as np
 from datasets.aleatoric_uncertainty_datasets import AleatoricSynbols
 from tqdm import tqdm
 
-FILE = '/home/fred/dump/ckpt_1e098eed78c5044fe470769409260b3e.h5'
+FILE = '/home/fred/dump/44be8e58b2f3562c3f06410e6ec31544.h5'
 
 kwargs = {
     'path': '/home/fred/dump/missing-symbol_n=100000_2020-Apr-10.h5py',
@@ -46,7 +46,7 @@ def main():
     plt.hlines(sum(aleatoric_idx), xmin=0, xmax=max(x_idx2), label='Number of aleatoric sample')
     plt.ylabel('Cumulative count')
     plt.xlabel('Active learning step')
-    plt.title('AL Selection for Entropy')
+    plt.title('AL Selection for BALD')
     plt.legend()
     plt.show()
 

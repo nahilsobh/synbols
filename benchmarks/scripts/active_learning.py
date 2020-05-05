@@ -78,7 +78,7 @@ EXP_GROUPS = {
             'lr': [0.001],
             'batch_size': [32],
             'model': "calibrated_active_learning",
-            'calibrate': True,
+            'calibrate': [True, False],
             'seed': [1337, 1338, 1339, 1340],
             'mu': 1e-3,
             'reg_factor': 1e-4,
@@ -141,12 +141,12 @@ EXP_GROUPS = {
             'max_epoch': 2000,
             'imagenet_pretraining': [True],
             'dataset': {
-                'path': '/mnt/datasets/public/research/synbols/missing-symbol_n=100000_2020-Apr-10.h5py',
+                'path': '/mnt/datasets/public/research/synbols/default_n=100000_2020-Apr-30.h5py',
                 'name': 'active_learning',
                 'task': 'char',
                 'initial_pool': 2000,
                 'seed': 1337,
-                'p': 0.5,
+                'p': 0.2,
                 'uncertainty_config': {}}}),
     'active_char_pixel_noise':
         hu.cartesian_exp_group({
@@ -165,7 +165,7 @@ EXP_GROUPS = {
             'max_epoch': 2000,
             'imagenet_pretraining': [True],
             'dataset': {
-                'path': '/mnt/datasets/public/research/synbols/missing-symbol_n=100000_2020-Apr-10.h5py',
+                'path': '/mnt/datasets/public/research/synbols/default_n=100000_2020-Apr-30.h5py',
                 'name': 'active_learning',
                 'task': 'char',
                 'initial_pool': 2000,
@@ -196,5 +196,27 @@ EXP_GROUPS = {
                 'task': 'char',
                 'initial_pool': 2000,
                 'seed': 1337,
-                'uncertainty_config': {'is_bold': {}}}})
+                'uncertainty_config': {'is_bold': {}}}}),
+'active_char_noise2':
+        hu.cartesian_exp_group({
+            'lr': [0.001],
+            'batch_size': [32],
+            'model': "active_learning",
+            'seed': [1400, 1401, 140],
+            'mu': 1e-3,
+            'reg_factor': 1e-4,
+            'backbone': "vgg16",
+            'num_classes': 52,
+            'query_size': [100],
+            'learning_epoch': 10,
+            'heuristic': ['bald', 'random', 'entropy'],
+            'iterations': [20],
+            'max_epoch': 2000,
+            'imagenet_pretraining': [True],
+            'dataset': {
+                'path': '/mnt/datasets/public/research/synbols/missing-symbol_n=100000_2020-Apr-10.h5py',
+                'name': 'active_learning',
+                'task': 'char',
+                'initial_pool': 2000,
+                'seed': 1337}}),
 }
