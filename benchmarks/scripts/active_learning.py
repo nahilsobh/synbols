@@ -1,5 +1,4 @@
 from haven import haven_utils as hu
-from pprint import pprint
 
 # Define exp groups for parameter search
 model_cfg = {
@@ -68,5 +67,3 @@ EXP_GROUPS = {
             'initial_pool': 2000,
             'seed': 1337}))
 }
-
-pprint(EXP_GROUPS)
