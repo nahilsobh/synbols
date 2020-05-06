@@ -9,9 +9,9 @@ import pandas as pd
 
 # please define the path to the experiments
 savedir_base = "/mnt/projects/bayesian-active-learning/synbols_ckpt"
-from benchmarks.scripts.old_active_learning import EXP_GROUPS
+from benchmarks.scripts.active_learning import EXP_GROUPS
 
-exp_list = EXP_GROUPS['active_char_label_noise']
+exp_list = EXP_GROUPS['active_char']
 
 # get specific experiments, for example, {'model':'resnet34'}
 filterby_list = None
@@ -52,6 +52,16 @@ for exp_lst in zip(*d.values()):
     x_axis = gb['num_samples'].mean()
     y_mean = gb['test_loss'].mean()
     y_std = gb['test_loss'].std()
-    result[heuristic] = pd.DataFrame({'x_axis': x_axis, 'y_mean': y_mean, 'y_std': y_std})
+    result[heuristic] = pd.DataFrame(
+        {'x_axis': x_axis, 'y_mean': y_mean, 'y_std': y_std, 'heuristic': heuristic})
 
-print(result['bald'][result['bald']['x_axis'] == 20000])
+five_percent = int(0.05 * 100000)
+ten_percent = int(0.10 * 100000)
+twenty_percent = int(0.20 * 100000)
+
+for p_s, p in zip(['5%', '10%', '20%'], [five_percent, ten_percent, twenty_percent]):
+    print(f"----------------{p_s}-------------------")
+    for heuristic in ['bald', 'entropy', 'random']:
+        row = result[heuristic][result[heuristic]['x_axis'] == p]
+        s = f"{row['heuristic'].item()} {row['y_mean'].item():.3f}±{row['y_std'].item():.3f}"
+        print(s)
