@@ -10,7 +10,7 @@ from baal.active import ActiveLearningLoop, get_heuristic
 from baal.active.heuristics import BALD, requireprobs, xlogy, BatchBALD
 from baal.bayesian.dropout import patch_module
 from baal.calibration import DirichletCalibrator
-from baal.utils.metrics import ClassificationReport
+from baal.utils.metrics import ClassificationReport, Metrics
 from torch.nn import CrossEntropyLoss
 from torch.utils.data import DataLoader
 from torchvision import models
@@ -22,6 +22,39 @@ from models.modules.mixup import patch_layer_mixup, MixUpCriterion
 pjoin = os.path.join
 
 LOG_UNCERT = False
+
+
+class Accuracy(Metrics):
+    def __init__(self):
+        super().__init__(average=False)
+        self._tp = 0
+        self._count = 0
+
+    def reset(self):
+        self._tp = 0
+        self._count = 0
+
+    def update(self, output=None, target=None):
+        """
+        Update TP and support.
+
+        Args:
+            output (tensor): predictions of model
+            target (tensor): labels
+
+        Raises:
+            ValueError if the first dimension of output and target don't match.
+        """
+        batch_size = target.shape[0]
+        output = output.detach().cpu().numpy()
+        target = target.detach().cpu().numpy().reshape(-1)
+        output = np.argmax(output, axis=1).reshape(-1)
+        self._count += batch_size
+        self._tp += (target == output).sum()
+
+    @property
+    def value(self):
+        return self._tp / self._count
 
 
 class BetaBALD(BALD):
@@ -89,6 +122,7 @@ class ActiveLearning(torch.nn.Module):
             self.heuristic = get_heuristic(exp_dict['heuristic'], shuffle_prop=shuffle_prop)
         self.wrapper = ModelWrapper(self.backbone, criterion=self.criterion)
         self.wrapper.add_metric('cls_report', lambda: ClassificationReport(exp_dict["num_classes"]))
+        self.wrapper.add_metric('accuracy', lambda: Accuracy())
         self.loop = ActiveLearningLoop(None, self.wrapper.predict_on_dataset,
                                        heuristic=self.heuristic,
                                        ndata_to_label=exp_dict['query_size'],

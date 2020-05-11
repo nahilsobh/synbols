@@ -26,8 +26,16 @@ EXP_GROUPS = {
                 'name': 'active_learning',
                 'task': 'char',
                 'initial_pool': 2000,
-                'seed': 1337,
-                'uncertainty_config': {'is_bold': {}}})),
+                'seed': 1337})),
+    'active_char_missing':
+        hu.cartesian_exp_group(dict(model_cfg,
+                               dataset={
+                                   'path': '/mnt/datasets/public/research/synbols/active_learning/missing-symbol_n=100000_2020-Apr-30.h5py',
+                                   'name': 'active_learning',
+                                   'task': 'char',
+                                   'initial_pool': 2000,
+                                   'seed': 1337
+                               })),
     'active_char_label_noise':
         hu.cartesian_exp_group(dict(**model_cfg, dataset={
             'path': '/mnt/datasets/public/research/synbols/default_n=100000_2020-Apr-30.h5py',
@@ -54,7 +62,7 @@ EXP_GROUPS = {
             'seed': 1337})),
     'active_char_large_trans':
         hu.cartesian_exp_group(dict(**model_cfg, dataset={
-            'path': '/mnt/datasets/public/research/synbols/active_learning/large-translation_n=100000_2020-May-04.h5py',
+            'path': '/mnt/datasets/public/research/synbols/active_learning/large-translation_n=100000_2020-May-06.h5py',
             'name': 'active_learning',
             'task': 'char',
             'initial_pool': 2000,
