@@ -17,6 +17,7 @@ from torchvision import models
 
 from datasets import get_dataset
 from models.modules import embd_prop
+from models.modules.csghmc import CSGHMCWrapper
 from models.modules.mixup import patch_layer_mixup, MixUpCriterion
 
 pjoin = os.path.join
@@ -268,4 +269,6 @@ class EmbeddingPropActiveLearning(ActiveLearning):
 
 
 class CSGHMCActiveLearning(ActiveLearning):
-    pass
+    def __init__(self, exp_dict):
+        super().__init__(exp_dict)
+        self.wrapper = CSGHMCWrapper(self.wrapper.model, self.wrapper.criterion)

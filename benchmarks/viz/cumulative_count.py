@@ -6,10 +6,10 @@ import numpy as np
 from datasets.aleatoric_uncertainty_datasets import AleatoricSynbols
 from tqdm import tqdm
 
-FILE = '/home/fred/dump/44be8e58b2f3562c3f06410e6ec31544.h5'
+FILE = '/home/fred/dump/0e797c0eb3836aaae1664406ea6fd3ee.h5'
 
 kwargs = {
-    'path': '/home/fred/dump/missing-symbol_n=100000_2020-Apr-10.h5py',
+    'path': '/home/fred/dump/missing-symbol_n=100000_2020-Apr-30.h5py',
     'name': 'active_learning',
     'task': 'char',
     'initial_pool': 2000,
@@ -36,7 +36,7 @@ def main():
     ncum_s.sort()
     ncum_s = ncum_s.max() - ncum_s
     x_idx2, y_count2 = np.unique(ncum_s, return_counts=True)
-    x_idx2, y_count2 = x_idx2[1:], y_count2[1:]
+    #x_idx2, y_count2 = x_idx2[1:], y_count2[1:]
     y_count2 = np.cumsum(y_count2)
     x_idx, y_count = np.unique(toplot, return_counts=True)
     y_count = np.cumsum(y_count)

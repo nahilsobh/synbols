@@ -5,7 +5,6 @@ import numpy as np
 from PIL import Image
 from skimage import img_as_float
 from skimage.util import random_noise
-from torchvision.transforms import Compose
 
 from datasets.synbols import Synbols
 
@@ -18,7 +17,9 @@ class ColorNoise:
 
     def __call__(self, x):
         if self.rng.rand() < self.p:
-            x = Image.fromarray(random_noise(img_as_float(x), sigma=self.sigma ** 2))
+            x = Image.fromarray((random_noise(img_as_float(x),
+                                              var=self.sigma ** 2) * 255).astype(np.uint8))
+
         return x
 
 
@@ -83,7 +84,7 @@ class AleatoricSynbols(Synbols):
         self.noise_classes = n_classes
         self.rng = np.random.RandomState(self.seed)
         if self.pixel_p > 0 and split == 'train':
-            self.transform = self._add_pixel_noise()
+            self.x = self._add_pixel_noise()
         if self.p > 0 and len(uncertainty_config) == 0:
             self.y = self._shuffle_label()
         elif self.p > 0:
@@ -112,7 +113,8 @@ class AleatoricSynbols(Synbols):
         return _shuffle_subset(self.y, self.p, self.rng)
 
     def _add_pixel_noise(self):
-        return Compose([ColorNoise(self.p, self.pixel_sigma, self.seed), self.transform])
+        color_noise = ColorNoise(self.pixel_p, self.pixel_sigma, self.seed)
+        return [color_noise(xi) for xi in self.x]
 
     def _create_aleatoric_noise(self):
         self._latent_space = self._get_latent_space()
@@ -163,8 +165,9 @@ class AleatoricSynbols(Synbols):
 
 
 if __name__ == '__main__':
-    synbols = AleatoricSynbols(uncertainty_config={'is_bold': {}},
-                               p=0.05,
+    synbols = AleatoricSynbols(uncertainty_config={},
+                               pixel_sigma=0.7,
+                               pixel_p=0.5,
                                key='char',
                                n_classes=5,
                                path='/mnt/datasets/public/research/synbols/old/latin_res=32x32_n=100000.npz',

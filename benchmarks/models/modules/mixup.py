@@ -14,6 +14,15 @@ def get_mixup_params(input, alpha, rng, rng_numpy):
 
 
 def patch_layer_mixup(module, name, alpha, seed):
+    """
+    Patch a module by change layer with name `name`.
+
+    Args:
+        module (nn.Module): A Module
+        name (str): Layer name (ex: features.2)
+        alpha (float): Alpha threshold for Mixup
+        seed (int): Seed for the MixUp sync.
+    """
     mods = dict(module.named_modules())
     if '.' in name:
         splitted = name.split('.')
